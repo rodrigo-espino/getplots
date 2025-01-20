@@ -113,7 +113,7 @@ with st.sidebar:
         # Botón para agregar más comparaciones
         if st.button("Agregar otra comparación"):
             st.session_state.num_comparisons += 1
-            st.experimental_rerun()
+            # st.experimental_rerun()
 
         st.subheader('Herramienta de visualizacion')
         herramienta = st.radio(
@@ -138,6 +138,7 @@ if df is not None:
                 # Crear un DataFrame filtrado específico para cada columna
                 df_filtrado = df[['date', column]].iloc[indices_seleccionados[column]:].copy()
                 df_filtrado = df_filtrado.dropna()
+                df_filtrado[column] = df_filtrado[column].astype(float).astype(int)
                 # Calcular la línea de tendencia específica para esta columna
                 best_fit_type, best_fit_data = fit_trendlines(
                     np.arange(len(df_filtrado)),
@@ -197,47 +198,46 @@ if df is not None:
             if var1 in indices and var2 in indices:
                 # Encontrar el índice mínimo entre las dos variables
                 min_index = min(indices[var1], indices[var2])
-
-                # Crear DataFrame con ambas variables a partir del índice mínimo
-                df_comp = df[['date', var1, var2]].iloc[min_index:].copy()
-
-                # Calcular los límites del eje Y
-                y_min = min(df_comp[var1].min(), df_comp[var2].min())
-                y_max = max(df_comp[var1].max(), df_comp[var2].max())
-                # Añadir un margen del 10%
-                y_margin = (y_max - y_min) * 0.1
-                y_min -= y_margin
-                y_max += y_margin
-
-                if herramienta == "Seaborn":
-                    fig, ax = plt.subplots(figsize=(10, 6))
-                    sns.lineplot(data=df_comp, x='date', y=var1, label=var1)
-                    sns.lineplot(data=df_comp, x='date', y=var2, label=var2)
-                    plt.xticks(rotation=45)
-                    plt.ylim(y_min, y_max)  # Establecer límites del eje Y
-                    plt.title(f'Comparación: {var1} vs {var2}\nDatos desde el índice {min_index}')
-                    plt.xlabel('Date')
-                    plt.legend()
-                    st.pyplot(fig)
-                    plt.close()
-
-                elif herramienta == "Matplotlib":
-                    fig, ax = plt.subplots(figsize=(10, 6))
-                    ax.plot(df_comp['date'], df_comp[var1], label=var1)
-                    ax.plot(df_comp['date'], df_comp[var2], label=var2)
-                    plt.xticks(rotation=45)
-                    plt.ylim(y_min, y_max)  # Establecer límites del eje Y
-                    plt.title(f'Comparación: {var1} vs {var2}\nDatos desde el índice {min_index}')
-                    plt.xlabel('Date')
-                    plt.legend()
-                    st.pyplot(fig)
-                    plt.close()
-
-                elif herramienta == "Plotly":
-                    fig = px.line(df_comp, x='date', y=[var1, var2],
-                                  title=f'Comparación: {var1} vs {var2}\nDatos desde el índice {min_index}')
-                    fig.update_xaxes(title='Date')
-                    fig.update_yaxes(range=[y_min, y_max])  # Establecer límites del eje Y
-                    st.plotly_chart(fig, use_container_width=True)
             else:
-                st.warning(f"No se encontraron índices para alguna de las variables seleccionadas: {var1} o {var2}")
+                min_index = 0
+                # Crear DataFrame con ambas variables a partir del índice mínimo
+            df_comp = df[['date', var1, var2]].iloc[min_index:].copy()
+
+            # Calcular los límites del eje Y
+            y_min = min(df_comp[var1].min(), df_comp[var2].min())
+            y_max = max(df_comp[var1].max(), df_comp[var2].max())
+            # Añadir un margen del 10%
+            y_margin = (y_max - y_min) * 0.1
+            y_min -= y_margin
+            y_max += y_margin
+
+            if herramienta == "Seaborn":
+                fig, ax = plt.subplots(figsize=(10, 6))
+                sns.lineplot(data=df_comp, x='date', y=var1, label=var1)
+                sns.lineplot(data=df_comp, x='date', y=var2, label=var2)
+                plt.xticks(rotation=45)
+                plt.ylim(y_min, y_max)  # Establecer límites del eje Y
+                plt.title(f'Comparación: {var1} vs {var2}\nDatos desde el índice {min_index}')
+                plt.xlabel('Date')
+                plt.legend()
+                st.pyplot(fig)
+                plt.close()
+
+            elif herramienta == "Matplotlib":
+                fig, ax = plt.subplots(figsize=(10, 6))
+                ax.plot(df_comp['date'], df_comp[var1], label=var1)
+                ax.plot(df_comp['date'], df_comp[var2], label=var2)
+                plt.xticks(rotation=45)
+                plt.ylim(y_min, y_max)  # Establecer límites del eje Y
+                plt.title(f'Comparación: {var1} vs {var2}\nDatos desde el índice {min_index}')
+                plt.xlabel('Date')
+                plt.legend()
+                st.pyplot(fig)
+                plt.close()
+
+            elif herramienta == "Plotly":
+                fig = px.line(df_comp, x='date', y=[var1, var2],
+                              title=f'Comparación: {var1} vs {var2}\nDatos desde el índice {min_index}')
+                fig.update_xaxes(title='Date')
+                fig.update_yaxes(range=[y_min, y_max])  # Establecer límites del eje Y
+                st.plotly_chart(fig, use_container_width=True)
